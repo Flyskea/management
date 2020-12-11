@@ -1,0 +1,14 @@
+{
+  "mysql": {
+    "address": "127.0.0.1",
+    "port": "3306",
+    "user": "root",
+    "password": "Woaini.12",
+    "database": "manage"
+  },
+  "gin": {
+    "address": "0.0.0.0",
+    "mode": "debug",
+    "port": "80"
+  }
+}
