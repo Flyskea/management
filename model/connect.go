@@ -17,6 +17,6 @@ func ConnectMysql(dsn string) error {
 		return fmt.Errorf("数据库连接失败: %s", err)
 	}
 	DB = db
-	_ = DB.AutoMigrate(&User{}, &Permission{}, &Role{}, &RolePermission{}, &UserRole{}, &Form{}, &Score{}, &HTMLSelect{})
+	_ = DB.AutoMigrate(&User{}, &Permission{}, &Role{}, &RolePermission{}, &UserRole{}, &Order{}, &Score{}, &HTMLSelect{}, &ProblemTypeScore{})
 	return nil
 }

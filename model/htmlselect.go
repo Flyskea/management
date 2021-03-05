@@ -42,10 +42,34 @@ func GetTrees(pid uint) []*Node {
 	return tree
 }
 
+//GetLists return []htmlselect with given parentid
+func GetLists(pid uint) []HTMLSelect {
+	var htmls []HTMLSelect
+	DB.Where("parent_id = ?", pid).Find(&htmls)
+	return htmls
+}
+
 //Insert Insert values into htmlselect database
 func Insert(name string, pid uint) {
 	var hs HTMLSelect
 	hs.Name = name
 	hs.ParentID = pid
 	DB.Create(&hs)
+}
+
+// IsSelectExist ..
+func IsSelectExist(pname, name string) bool {
+	s := HTMLSelect{}
+	if err := DB.Where("name = ?", pname).First(&s).Error; err != nil {
+		return false
+	}
+	isLocation := false
+	lists := GetLists(s.ID)
+	for _, v := range lists {
+		if name == v.Name {
+			isLocation = true
+			break
+		}
+	}
+	return isLocation
 }

@@ -5,20 +5,29 @@ import (
 	"manage/utils"
 	"net/http"
 
+	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 )
+
+var normalUserPermissions map[string]struct{} = map[string]struct{}{
+	"GET:/api/v1/myorder":    {},
+	"GET:/api/v1/order":      {},
+	"GET:/htmlselect":        {},
+	"GET:/api/v1/allpermiss": {},
+	"GET:/api/v1/menus":      {},
+}
 
 //LoginAuth a middleware of verifying whether user is logged in
 func LoginAuth() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		sess := utils.GlobalSessions.SessionStart(c)
-		sessUID := sess.Get("userRole")
+		session := sessions.Default(c)
+		sessUID := session.Get("RoleID")
 		if sessUID != nil {
 			c.Next()
 			return
 		}
-		utils.GlobalSessions.SessionDestroy(c)
-		c.JSON(http.StatusUnauthorized, gin.H{"msg": "请先登陆"})
+		session.Clear()
+		utils.Response(c, http.StatusUnauthorized, nil, "请先登录")
 		c.Abort()
 	}
 }
@@ -26,24 +35,34 @@ func LoginAuth() gin.HandlerFunc {
 //PermissionAuth a middleware of verifying whether user has permission to enter this url
 func PermissionAuth() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		sess := utils.GlobalSessions.SessionStart(c)
-		currentroleID := sess.Get("userRole").(uint)
+		requestURL := c.Request.Method + ":" + c.Request.URL.Path
+		if _, ok := normalUserPermissions[requestURL]; ok {
+			c.Next()
+		}
+		session := sessions.Default(c)
+		currentRoleID := session.Get("RoleID").(uint)
 
-		currentrole := model.Role{}
-		if err := model.DB.Where("id = ?", currentroleID).First(&currentrole).Error; err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"msg": "验证失败"})
+		currentRole := model.Role{}
+		if err := model.DB.Where("id = ?", currentRoleID).First(&currentRole).Error; err != nil {
+			utils.InternalError(c, nil, "没有该角色或服务器内部错误")
+			c.Abort()
+			return
+		}
+		permissions, err := currentRole.GetPermissions()
+		if err != nil {
+			utils.InternalError(c, nil, "数据库操作失败")
 			c.Abort()
 			return
 		}
 
-		h, err := currentrole.HasPermisson(c.Request.Method + ":" + c.Request.RequestURI)
+		h, err := currentRole.HasPermissonByURL(permissions, requestURL)
 		if !h {
-			c.JSON(http.StatusUnauthorized, gin.H{"msg": "没有权限"})
+			utils.Response(c, http.StatusForbidden, nil, "没有权限")
 			c.Abort()
 			return
 		}
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"msg": "验证失败"})
+			utils.InternalError(c, nil, "数据库操作失败")
 			c.Abort()
 			return
 		}

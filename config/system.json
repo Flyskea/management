@@ -9,6 +9,9 @@
   "gin": {
     "address": "0.0.0.0",
     "mode": "debug",
-    "port": "80"
+    "port": "443"
+  },
+  "session": {
+    "cookiesecret": "I-KNOW-WHAT-I-AM-DOING-SHUT-UP-YOUR-FUCK-MOUSE-WOOHOO"
   }
 }
