@@ -11,8 +11,9 @@ type Permission struct {
 	URL       string `gorm:"type:varchar(64)" json:"url"`
 	Path      string `gorm:"type:varchar(64)" json:"path"`
 	Component string `gorm:"type:varchar(64)" json:"component"`
-	ParentID  uint   `json:"pid"`
-	IsMenu    bool   `json:"isMenu"`
+	Level     int
+	ParentID  uint `json:"pid"`
+	IsMenu    bool `json:"isMenu"`
 }
 
 //PermissionNode used to return json object to frontend

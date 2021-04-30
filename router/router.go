@@ -1,6 +1,7 @@
 package router
 
 import (
+	_ "manage/docs"
 	"manage/handlers"
 	"manage/middlewares"
 	"time"
@@ -9,6 +10,8 @@ import (
 	"github.com/gin-contrib/sessions/cookie"
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/viper"
+	ginSwagger "github.com/swaggo/gin-swagger"
+	"github.com/swaggo/gin-swagger/swaggerFiles"
 )
 
 //NewRouter used to get new router
@@ -18,23 +21,34 @@ func NewRouter() *gin.Engine {
 	r.Use(middlewares.Cors(), middlewares.Limit(&middlewares.Config{TimeLimitPerAct: 5, Per: time.Second, MaxSlack: time.Second}, limit))
 	store := cookie.NewStore([]byte(viper.GetString("session.cookiesecret")))
 	store.Options(sessions.Options{
-		Secure:   true,
-		HttpOnly: true,
+		HttpOnly: false,
 		MaxAge:   7 * 24 * 60 * 60,
+		Path:     "/",
 	})
 	r.Use(sessions.Sessions("mysession", store))
+	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	r.NoRoute(handlers.NotFound)
 	v1 := r.Group("/api/v1", middlewares.LoginAuth(), middlewares.Csrf(nil), middlewares.PermissionAuth())
 	{
-		v1.GET("/role", handlers.RoleLists)
-		v1.POST("/role", handlers.AddRole)
-		v1.PUT("/role/:id", handlers.UpdateRole)
-		v1.DELETE("/role/:id", handlers.DeleteRole)
+		v1.GET("/htmlselect", handlers.HTMLSelect)
+		roles := v1.Group("/role")
+		{
+			roles.GET(":id", handlers.GetRoleByID)
+			roles.GET("", handlers.RoleLists)
+			roles.POST("", handlers.AddRole)
+			roles.POST(":id/update", handlers.UpdateRole)
+			roles.POST(":id/delete", handlers.DeleteRole)
+			roles.POST(":id/rights", handlers.AddRolePermissions)
+			roles.POST(":id/rights/:pid/delete", handlers.DeleteRolePermission)
+		}
 
+		v1.POST("/user/:id/role", handlers.UpdateUserRole)
 		v1.GET("/user", handlers.UserLists)
 		v1.POST("/user", handlers.AddUser)
-		v1.DELETE("/user/:id", handlers.DeleteUser)
+		v1.POST("/user/:id/delete", handlers.DeleteUser)
 
+		v1.GET("/order/:id", handlers.GetOrderByID)
+		v1.GET("/order/:id/status", handlers.OrderStatus)
 		v1.GET("/myorder", handlers.MyAddOrder)
 		v1.GET("/mygotorder", handlers.MyGotOrder)
 		v1.GET("/order", handlers.OrderLists)
@@ -51,15 +65,11 @@ func NewRouter() *gin.Engine {
 		v1.GET("/auditcommit", handlers.NeedGrade)
 		v1.POST("/auditcommit/:id", handlers.AdminGradeOrder)
 
+		v1.POST("/revoke/:id", handlers.RevokeGotOrder)
+
 		v1.GET("/menus", handlers.GetRoleMenus)
 		v1.GET("/allpermissions", handlers.GetAllPermissions)
 	}
-	r.POST("/revoke/:id", handlers.RevokeGotOrder)
-	r.GET("/htmlselect", handlers.HTMLSelect)
-	r.POST("/login", handlers.Login)
-	r.GET("/order/:id", handlers.GetOrderByID)
-	r.GET("/order/:id/status", handlers.OrderStatus)
-	r.POST("/user/:id/rights", handlers.UpdateUserRole)
-	r.GET("/role/:id", handlers.GetRoleByID)
+	r.POST("/api/v1/login", handlers.Login)
 	return r
 }

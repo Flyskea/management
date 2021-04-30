@@ -43,7 +43,7 @@ func DefaultOptions() *Options {
 		MaxAge:      60 * 60 * 24 * 180,
 		CookieName:  "csrf_token",
 		HeaderName:  "X-CSRF-Token",
-		Secure:      true,
+		Secure:      false,
 		SessionName: "csrf_token_session",
 		IssuedName:  "csrf_token_issued",
 		ByteLenth:   32,

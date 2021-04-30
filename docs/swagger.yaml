@@ -1,0 +1,44 @@
+basePath: /api/v1
+host: 127.0.0.1
+info:
+  contact:
+    name: Flyskea
+  description: 四川农业大学网络维修平台
+  title: Swagger Example API
+  version: "1.0"
+paths:
+  /login:
+    post:
+      consumes:
+      - application/json
+      description: 用户登录
+      parameters:
+      - description: 人名
+        in: body
+        name: name
+        required: true
+        schema:
+          type: string
+      - description: 密码
+        in: body
+        name: pwd
+        required: true
+        schema:
+          type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{"msg": "hello Razeen"}'
+          schema:
+            type: string
+        "400":
+          description: '{"msg": "who are you"}'
+          schema:
+            type: string
+      summary: 测试用户登录
+      tags:
+      - user
+schemes:
+- http
+swagger: "2.0"

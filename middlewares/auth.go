@@ -10,11 +10,12 @@ import (
 )
 
 var normalUserPermissions map[string]struct{} = map[string]struct{}{
-	"GET:/api/v1/myorder":    {},
-	"GET:/api/v1/order":      {},
-	"GET:/htmlselect":        {},
-	"GET:/api/v1/allpermiss": {},
-	"GET:/api/v1/menus":      {},
+	"GET:/api/v1/myorder":        {},
+	"GET:/api/v1/order":          {},
+	"GET:/htmlselect":            {},
+	"GET:/api/v1/allpermissions": {},
+	"GET:/api/v1/menus":          {},
+	"POST:/login":                {},
 }
 
 //LoginAuth a middleware of verifying whether user is logged in
@@ -38,6 +39,7 @@ func PermissionAuth() gin.HandlerFunc {
 		requestURL := c.Request.Method + ":" + c.Request.URL.Path
 		if _, ok := normalUserPermissions[requestURL]; ok {
 			c.Next()
+			return
 		}
 		session := sessions.Default(c)
 		currentRoleID := session.Get("RoleID").(uint)

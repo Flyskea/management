@@ -21,7 +21,7 @@ type UserDTO struct {
 	Name      string
 	WorkID    string
 	Phone     string
-	RoleName  string
+	RID       uint
 }
 
 // Convert use user data fill dto data
@@ -31,12 +31,12 @@ func (uDTO *UserDTO) Convert(u *model.User) {
 	uDTO.Name = u.Name
 	uDTO.Phone = u.Phone
 	uDTO.WorkID = u.WorkID
-	roleName := ""
-	if err := model.DB.Table("users").Select("roles.name").
+	roleName := 0
+	if err := model.DB.Table("users").Select("user_roles.role_id").
 		Where("users.name = ?", u.Name).
-		Joins("JOIN user_roles on users.id = user_roles.user_id JOIN roles ON user_roles.role_id = roles.id").
+		Joins("JOIN user_roles on users.id = user_roles.user_id").
 		Find(&roleName).Error; err != nil {
 		logger.Error(err)
 	}
-	uDTO.RoleName = roleName
+	uDTO.RID = uint(roleName)
 }

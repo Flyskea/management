@@ -189,7 +189,7 @@ func DeleteRolePermission(c *gin.Context) {
 		return
 	}
 	pidInt, err := strconv.ParseUint(pid, 10, 64)
-	if err != nil || pidInt < 0 {
+	if err != nil {
 		utils.BadRequest(c, nil, "参数设置错误")
 		return
 	}

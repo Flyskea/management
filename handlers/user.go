@@ -173,6 +173,16 @@ func UserLists(c *gin.Context) {
 	utils.Success(c, data, "查询用户列表成功")
 }
 
+// @Summary 测试用户登录
+// @Description 用户登录
+// @Tags user
+// @Accept json
+// @Produce json
+// @Param name body object true "人名"
+// @Param pwd body object true "密码"
+// @Success 200 {string} string "{"msg": "hello Razeen"}"
+// @Failure 400 {string} string "{"msg": "who are you"}"
+// @Router /login [post]
 //Login log in handler
 func Login(c *gin.Context) {
 	// 登录信息
@@ -210,5 +220,5 @@ func Login(c *gin.Context) {
 		utils.InternalError(c, nil, "Cookie设置错误")
 	}
 
-	utils.Success(c, nil, "登陆成功")
+	utils.Success(c, nil, "登录成功")
 }
