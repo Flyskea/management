@@ -41,11 +41,13 @@ func NewRouter() *gin.Engine {
 			roles.POST(":id/rights", handlers.AddRolePermissions)
 			roles.POST(":id/rights/:pid/delete", handlers.DeleteRolePermission)
 		}
-
-		v1.POST("/user/:id/role", handlers.UpdateUserRole)
-		v1.GET("/user", handlers.UserLists)
-		v1.POST("/user", handlers.AddUser)
-		v1.POST("/user/:id/delete", handlers.DeleteUser)
+		users := v1.Group("/user")
+		{
+			users.POST(":id/role", handlers.UpdateUserRole)
+			users.GET("", handlers.UserLists)
+			users.POST("", handlers.AddUser)
+			users.POST(":id/delete", handlers.DeleteUser)
+		}
 
 		v1.GET("/order/:id", handlers.GetOrderByID)
 		v1.GET("/order/:id/status", handlers.OrderStatus)

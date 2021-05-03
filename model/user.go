@@ -1,6 +1,7 @@
 package model
 
 import (
+	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
 
@@ -12,6 +13,10 @@ type User struct {
 	WorkID   string `gorm:"unique;type:varchar(20)" json:"wid" binding:"required"`
 	Phone    string `gorm:"type:varchar(20)" json:"phone" binding:"required"`
 }
+
+const (
+	PassWordCost = 10
+)
 
 //IsUserExist used to detect user is whether in database
 func (u *User) IsUserExist() (bool, error) {
@@ -53,14 +58,10 @@ func (u *User) Save(roleID uint) error {
 func (u *User) UpdateRole(roleID uint) error {
 	tx := DB.Begin()
 	ur := UserRole{}
-
-	if err := tx.Where("user_id = ?", u.ID).First(&ur).Error; err != nil {
-		tx.Rollback()
-		return err
-	}
-
+	ur.UserID = u.ID
 	ur.RoleID = roleID
-	if err := tx.Model(&ur).Updates(&ur).Error; err != nil {
+
+	if err := tx.Model(&ur).Where("user_id = ?", u.ID).Updates(&ur).Error; err != nil {
 		tx.Rollback()
 		return err
 	}
@@ -107,4 +108,20 @@ func (u *User) GetUserByWorkID() error {
 		return err
 	}
 	return nil
+}
+
+// SetPassword 设置密码
+func (user *User) SetPassword(password string) error {
+	bytes, err := bcrypt.GenerateFromPassword([]byte(password), PassWordCost)
+	if err != nil {
+		return err
+	}
+	user.Password = string(bytes)
+	return nil
+}
+
+// CheckPassword 校验密码
+func (user *User) CheckPassword(password string) bool {
+	err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
+	return err == nil
 }

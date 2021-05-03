@@ -50,9 +50,9 @@ type Order struct {
 	//用户联系方式
 	UserTelephone string `gorm:"type:varchar(11)" json:"telephone"`
 	//维修人员回退订单信息
-	BackText string `gorm:"type:varchar(100)" json:"backtext,index"`
+	BackText string `gorm:"type:varchar(100)" json:"backtext"`
 	//审核不通过信息
-	NotText string `gorm:"type:varchar(100)" json:"nottext,index"`
+	NotText string `gorm:"type:varchar(100)" json:"nottext"`
 	//评价
 	Feedback float32
 }
