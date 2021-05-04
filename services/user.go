@@ -43,15 +43,18 @@ type UserListService struct {
 func (service *UserLoginService) Login() (model.User, *serializer.Response) {
 	var user model.User
 	user.Name = service.UserName
-	if err := user.GetUserByName(); err != nil {
+	if ok, err := user.GetUserByName(); err != nil {
+		return user, serializer.DBErr(err)
+	} else if !ok {
 		return user, &serializer.Response{
-			Msg: "账号或密码错误",
+			Status: serializer.ErrUserInfo,
+			Msg:    "账号或密码错误",
 		}
 	}
-
 	if !user.CheckPassword(service.Password) {
 		return user, &serializer.Response{
-			Msg: "账号或密码错误",
+			Status: serializer.ErrUserInfo,
+			Msg:    "账号或密码错误",
 		}
 	}
 	return user, nil
@@ -68,24 +71,22 @@ func (service *UserAddService) Valid() (model.User, model.Role, *serializer.Resp
 	role.Name = service.Role
 	exist, err := user.IsUserExist()
 	if err != nil {
-		return user, role, &serializer.Response{
-			Msg: "创建失败",
-		}
+		return user, role, serializer.DBErr(err)
 	}
 	if exist {
 		return user, role, &serializer.Response{
-			Msg: "该用户已经存在",
+			Status: serializer.ErrParams,
+			Msg:    "该用户已经存在",
 		}
 	}
 	exist, err = role.IsRoleExist()
 	if err != nil {
-		return user, role, &serializer.Response{
-			Msg: "创建失败",
-		}
+		return user, role, serializer.DBErr(err)
 	}
 	if !exist {
 		return user, role, &serializer.Response{
-			Msg: "该角色不存在",
+			Status: serializer.ErrParams,
+			Msg:    "该角色不存在",
 		}
 	}
 	return user, role, nil
@@ -102,19 +103,14 @@ func (service *UserAddService) Register() (model.User, *serializer.Response) {
 	if user, role, resp = service.Valid(); resp != nil {
 		return user, resp
 	}
-
 	// 加密密码
 	if err := user.SetPassword(service.Password); err != nil {
-		return user, &serializer.Response{
-			Msg: "密码加密失败",
-		}
+		return user, serializer.BuildErr(err, "密码加密失败", serializer.ErrInternal)
 	}
 
 	// 创建用户
 	if err := user.Save(role.ID); err != nil {
-		return user, &serializer.Response{
-			Msg: "注册失败",
-		}
+		return user, serializer.DBErr(err)
 	}
 
 	return user, nil
@@ -126,25 +122,25 @@ func (service *UserDeleteService) Delete() *serializer.Response {
 	)
 	if service.ID == "" {
 		return &serializer.Response{
-			Msg: "参数错误",
+			Status: serializer.ErrParams,
+			Msg:    "参数错误",
 		}
 	}
 	id, err := strconv.Atoi(service.ID)
 	if err != nil || id < 0 {
-		return &serializer.Response{
-			Msg: "参数错误",
-		}
+		return serializer.ParamsErr(err)
 	}
 	if err := model.DB.Where("id = ?", id).First(&user).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return &serializer.Response{
-				Msg: "用户不存在",
+				Status: serializer.ErrParams,
+				Msg:    "用户不存在",
 			}
 		}
-		return serializer.BuildErr(err, err.Error())
+		return serializer.DBErr(err)
 	}
 	if err := user.Delete(); err != nil {
-		return serializer.BuildErr(err, err.Error())
+		return serializer.DBErr(err)
 	}
 	return nil
 }
@@ -156,39 +152,40 @@ func (service *UserRoleUpdateService) UpdateRole() (model.User, *serializer.Resp
 	)
 	if service.UserID == "" {
 		return user, &serializer.Response{
-			Msg: "参数错误",
+			Status: serializer.ErrParams,
+			Msg:    "参数错误",
 		}
 	}
 	id, err := strconv.Atoi(service.UserID)
 	if err != nil || id < 0 {
-		return user, &serializer.Response{
-			Msg: "参数错误",
-		}
+		return user, serializer.ParamsErr(err)
 	}
 
 	if err := model.DB.Where("id = ?", service.RoleID).First(&role).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return user, &serializer.Response{
-				Msg: "没有该角色",
+				Status: serializer.ErrParams,
+				Msg:    "没有该角色",
 			}
 		}
-		return user, serializer.BuildErr(err, err.Error())
+		return user, serializer.DBErr(err)
 	}
 	if err := model.DB.Where("id = ?", id).First(&user).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return user, &serializer.Response{
-				Msg: "没有该用户",
+				Status: serializer.ErrParams,
+				Msg:    "没有该用户",
 			}
 		}
-		return user, serializer.BuildErr(err, err.Error())
+		return user, serializer.DBErr(err)
 	}
 	if err := user.UpdateRole(role.ID); err != nil {
-		return user, serializer.BuildErr(err, err.Error())
+		return user, serializer.DBErr(err)
 	}
 	return user, nil
 }
 
-func (service *UserListService) List() (bool, *serializer.Response) {
+func (service *UserListService) List() *serializer.Response {
 	var (
 		page  uint64
 		size  uint64
@@ -200,33 +197,21 @@ func (service *UserListService) List() (bool, *serializer.Response) {
 
 	page, size, query, err = parseLimitQueryParam(query.Model(&model.User{}), service.Params)
 	if err != nil {
-		return false, &serializer.Response{
-			Msg:   "参数错误",
-			Error: err.Error(),
-		}
+		return serializer.ParamsErr(err)
 	}
 
 	page, size, total, err = paginate(model.DB.Model(&model.User{}).Unscoped(), page, size)
 	if err != nil {
-		return false, &serializer.Response{
-			Msg:   "参数错误",
-			Error: err.Error(),
-		}
+		return serializer.DBErr(err)
 	}
 
 	query, err = parseOrderParams(query, service.Params)
 	if err != nil {
-		return false, &serializer.Response{
-			Msg:   "参数错误",
-			Error: err.Error(),
-		}
+		return serializer.ParamsErr(err)
 	}
 	if err = query.Find(&users).Error; err != nil {
-		return false, &serializer.Response{
-			Msg:   "数据库连接错误",
-			Error: err.Error(),
-		}
+		return serializer.DBErr(err)
 	}
 
-	return true, serializer.BuildListResponse(serializer.BuildUsers(users), uint(total), uint(page), uint(size), "查询用户列表成功")
+	return serializer.BuildListResponse(serializer.BuildUsers(users), uint(total), uint(page), uint(size), "查询用户列表成功")
 }

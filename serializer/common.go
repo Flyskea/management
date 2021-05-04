@@ -2,9 +2,10 @@ package serializer
 
 // Response 基础序列化器
 type Response struct {
-	Data  interface{} `json:"data"`
-	Msg   string      `json:"msg"`
-	Error string      `json:"error"`
+	Status int         `json:"status"`
+	Data   interface{} `json:"data"`
+	Msg    string      `json:"msg"`
+	Error  string      `json:"error"`
 }
 
 // DataList 基础列表结构
@@ -26,11 +27,4 @@ func BuildListResponse(items interface{}, total, page, size uint, msg string) *R
 		},
 		Msg: msg,
 	}
-}
-
-func BuildErr(err error, msg string) *Response {
-	respErr := &Response{}
-	respErr.Error = err.Error()
-	respErr.Msg = msg
-	return respErr
 }

@@ -17,14 +17,13 @@ func AddUser(c *gin.Context) {
 		service service.UserAddService
 	)
 	if err := c.BindJSON(&service); err == nil {
-		if user, err := service.Register(); err == nil {
-			res := serializer.BuildUserResponse(user, "添加用户成功")
-			c.JSON(http.StatusOK, res)
+		if user, rsp := service.Register(); rsp == nil {
+			c.JSON(http.StatusOK, serializer.BuildUserResponse(user, "添加用户成功"))
 		} else {
-			c.JSON(http.StatusBadRequest, err)
+			SendJSON(c, rsp)
 		}
 	} else {
-		c.JSON(http.StatusBadRequest, serializer.BuildErr(err, err.Error()))
+		c.JSON(http.StatusBadRequest, serializer.ParamsErr(err))
 	}
 }
 
@@ -39,10 +38,10 @@ func UpdateUserRole(c *gin.Context) {
 		if user, rsp := service.UpdateRole(); rsp == nil {
 			c.JSON(http.StatusOK, serializer.BuildUserResponse(user, "更新用户角色成功"))
 		} else {
-			c.JSON(http.StatusBadRequest, rsp)
+			SendJSON(c, rsp)
 		}
 	} else {
-		c.JSON(http.StatusBadRequest, serializer.BuildErr(err, err.Error()))
+		c.JSON(http.StatusBadRequest, serializer.ParamsErr(err))
 	}
 }
 
@@ -54,7 +53,7 @@ func DeleteUser(c *gin.Context) {
 	service.ID = c.Param("id")
 
 	if rsp := service.Delete(); rsp != nil {
-		c.JSON(http.StatusInternalServerError, rsp)
+		SendJSON(c, rsp)
 	} else {
 		c.JSON(http.StatusOK, serializer.Response{
 			Msg: "删除该用户成功",
@@ -68,11 +67,7 @@ func UserLists(c *gin.Context) {
 		service service.UserListService
 	)
 	service.Params = c.Request.URL.Query()
-	if ok, rsp := service.List(); !ok {
-		c.JSON(http.StatusBadRequest, rsp)
-	} else {
-		c.JSON(http.StatusOK, rsp)
-	}
+	SendJSON(c, service.List())
 }
 
 // @Summary 测试用户登录

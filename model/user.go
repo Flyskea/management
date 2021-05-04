@@ -95,19 +95,27 @@ func (u *User) Delete() (err error) {
 }
 
 // GetUserByName GetUserByName
-func (u *User) GetUserByName() error {
+func (u *User) GetUserByName() (bool, error) {
 	if err := DB.Where("name = ?", u.Name).First(u).Error; err != nil {
-		return err
+		if err != gorm.ErrRecordNotFound {
+			return false, err
+		} else {
+			return false, nil
+		}
 	}
-	return nil
+	return true, nil
 }
 
 // GetUserByWorkID GetUserByWorkID
-func (u *User) GetUserByWorkID() error {
+func (u *User) GetUserByWorkID() (bool, error) {
 	if err := DB.Where("work_id = ?", u.WorkID).First(u).Error; err != nil {
-		return err
+		if err != gorm.ErrRecordNotFound {
+			return false, err
+		} else {
+			return false, nil
+		}
 	}
-	return nil
+	return true, nil
 }
 
 // SetPassword 设置密码
