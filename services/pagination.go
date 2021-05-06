@@ -24,8 +24,7 @@ func paginate(query *gorm.DB, queryPage, queryPerPage uint64) (uint64, uint64, i
 	)
 	if queryPerPage == 0 {
 		size = defaultPerPage
-	}
-	if queryPerPage > maxPerPage {
+	} else if queryPerPage > maxPerPage {
 		size = maxPerPage
 	} else {
 		size = queryPerPage
@@ -34,12 +33,13 @@ func paginate(query *gorm.DB, queryPage, queryPerPage uint64) (uint64, uint64, i
 	if err = query.Count(&total).Error; err != nil {
 		return 0, 0, 0, err
 	}
-
 	if page == 0 {
 		page = 1
 	}
 	tmp := calculateTotalPages(size, uint64(total))
-	if queryPage > tmp {
+	if queryPage == 0 {
+		page = 1
+	} else if queryPage > tmp {
 		page = tmp
 	} else {
 		page = queryPage

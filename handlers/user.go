@@ -4,7 +4,6 @@ import (
 	"manage/middlewares"
 	"manage/serializer"
 	service "manage/services"
-	"manage/utils"
 	"net/http"
 
 	"github.com/gin-contrib/sessions"
@@ -86,22 +85,24 @@ func Login(c *gin.Context) {
 	session := sessions.Default(c)
 	sessUID := session.Get("UserID")
 	if sessUID != nil {
-		utils.BadRequest(c, nil, "请勿重复登陆")
+		c.JSON(http.StatusBadRequest, serializer.Response{
+			Status: serializer.ErrUserInfo,
+			Msg:    "请勿重复登录",
+		})
 		return
 	}
-	if err := c.BindJSON(&service); err != nil {
-		utils.BadRequest(c, nil, "json信息错误")
-		return
-	}
-	if user, err := service.Login(); err != nil {
-		c.JSON(200, err)
-		return
+	if err := c.BindJSON(&service); err == nil {
+		if user, rsp := service.Login(); rsp != nil {
+			SendJSON(c, rsp)
+		} else {
+			middlewares.GenerateNewCsrf(c, session)
+			res := serializer.BuildUserResponse(user, "登录成功")
+			session.Set("UserID", user.WorkID)
+			session.Set("RoleID", res.Data.RoleID)
+			session.Save()
+			c.JSON(http.StatusOK, res)
+		}
 	} else {
-		middlewares.GenerateNewCsrf(c, session)
-		res := serializer.BuildUserResponse(user, "登录成功")
-		session.Set("UserID", user.WorkID)
-		session.Set("RoleID", res.Data.RoleID)
-		session.Save()
-		c.JSON(http.StatusOK, res)
+		c.JSON(http.StatusBadRequest, serializer.ParamsErr(err))
 	}
 }

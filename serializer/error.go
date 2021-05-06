@@ -5,6 +5,7 @@ const (
 	ErrLoginRequired    = 40001
 	ErrUserInfo         = 40002
 	ErrPermissionDenied = 40003
+	ErrNotFound         = 40004
 	ErrInternal         = 50000
 	ErrDatabase         = 50001
 )

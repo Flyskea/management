@@ -92,19 +92,16 @@ func (r *Role) Delete() (err error) {
 	if err = tx.Error; err != nil {
 		return err
 	}
-	defer func() {
-		if p := recover(); p != nil {
-			_ = tx.Rollback()
-			panic(p) // re-throw panic after Rollback
-		} else if err != nil {
-			_ = tx.Rollback() // err is non-nil; don't change it
-		} else {
-			err = tx.Commit().Error // err is nil; if Commit returns error update err
-		}
-	}()
-	err = tx.Delete(r).Error
-	err = tx.Where("role_id = ?", r.ID).Delete(&RolePermission{}).Error
-	return err
+	if err = tx.Delete(r).Error; err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	if err = tx.Where("role_id = ?", r.ID).Delete(&RolePermission{}).Error; err != nil {
+		tx.Rollback()
+		return err
+	}
+	return tx.Commit().Error
 }
 
 // DeletePermission delete role's permission
@@ -113,8 +110,10 @@ func (r *Role) DeletePermission(pid uint) (err error) {
 	if err = tx.Error; err != nil {
 		return err
 	}
-	err = tx.Where("permissions_id = ?", pid).Delete(&RolePermission{}).Error
-	return err
+	if err = tx.Where("permissions_id = ?", pid).Delete(&RolePermission{}).Error; err != nil {
+		return err
+	}
+	return tx.Commit().Error
 }
 
 func (r *Role) getPermissionHelper(menu int) ([]*PermissionNode, error) {
