@@ -2,7 +2,7 @@ package middlewares
 
 import (
 	"manage/model"
-	"manage/utils"
+	"manage/serializer"
 	"net/http"
 
 	"github.com/gin-contrib/sessions"
@@ -28,7 +28,10 @@ func LoginAuth() gin.HandlerFunc {
 			return
 		}
 		session.Clear()
-		utils.Response(c, http.StatusUnauthorized, nil, "请先登录")
+		c.JSON(http.StatusUnauthorized, serializer.Response{
+			Msg:    "请先登录",
+			Status: serializer.ErrLoginRequired,
+		})
 		c.Abort()
 	}
 }
@@ -46,25 +49,28 @@ func PermissionAuth() gin.HandlerFunc {
 
 		currentRole := model.Role{}
 		if err := model.DB.Where("id = ?", currentRoleID).First(&currentRole).Error; err != nil {
-			utils.InternalError(c, nil, "没有该角色或服务器内部错误")
+			c.JSON(http.StatusInternalServerError, serializer.DBErr(err))
 			c.Abort()
 			return
 		}
 		permissions, err := currentRole.GetPermissions()
 		if err != nil {
-			utils.InternalError(c, nil, "数据库操作失败")
+			c.JSON(http.StatusInternalServerError, serializer.DBErr(err))
 			c.Abort()
 			return
 		}
 
 		h, err := currentRole.HasPermissonByURL(permissions, requestURL)
 		if !h {
-			utils.Response(c, http.StatusForbidden, nil, "没有权限")
+			c.JSON(http.StatusForbidden, serializer.Response{
+				Msg:    "请先登录",
+				Status: serializer.ErrPermissionDenied,
+			})
 			c.Abort()
 			return
 		}
 		if err != nil {
-			utils.InternalError(c, nil, "数据库操作失败")
+			c.JSON(http.StatusInternalServerError, serializer.DBErr(err))
 			c.Abort()
 			return
 		}

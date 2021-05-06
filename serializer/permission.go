@@ -3,15 +3,15 @@ package serializer
 import "manage/model"
 
 type Permission struct {
-	ID        uint          `json:"id"`
-	ParentID  uint          `json:"pid"`
-	Level     int           `json:"level"`
-	Name      string        `json:"name"`
-	Path      string        `json:"path"`
-	URL       string        `json:"url"`
-	Component string        `json:"component"`
-	IsMenu    bool          `json:"is_menu"`
-	Child     []*Permission `json:"child"`
+	ID        uint          `json:"id" example:"1"`
+	ParentID  uint          `json:"pid" example:"0"`
+	Level     int           `json:"level" example:"0"`
+	Name      string        `json:"name" example:"删除用户"`
+	Path      string        `json:"path" example:"/user/:id/delete"`
+	URL       string        `json:"url" example:"POST:/user/:id/delete"`
+	Component string        `json:"component" example:"user"`
+	IsMenu    bool          `json:"is_menu" example:"false"`
+	Child     []*Permission `json:"child" `
 }
 
 func BuildPermission(permission model.Permission) *Permission {

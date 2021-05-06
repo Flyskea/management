@@ -1,4 +1,162 @@
 basePath: /api/v1
+definitions:
+  serializer.DataList:
+    properties:
+      items:
+        type: object
+      page:
+        type: integer
+      size:
+        type: integer
+      total:
+        type: integer
+    type: object
+  serializer.Permission:
+    properties:
+      child:
+        items:
+          $ref: '#/definitions/serializer.Permission'
+        type: array
+      component:
+        example: user
+        type: string
+      id:
+        example: 1
+        type: integer
+      is_menu:
+        example: false
+        type: boolean
+      level:
+        example: 0
+        type: integer
+      name:
+        example: 删除用户
+        type: string
+      path:
+        example: /user/:id/delete
+        type: string
+      pid:
+        example: 0
+        type: integer
+      url:
+        example: POST:/user/:id/delete
+        type: string
+    type: object
+  serializer.Response:
+    properties:
+      data:
+        type: object
+      error:
+        type: string
+      msg:
+        type: string
+      status:
+        type: integer
+    type: object
+  serializer.Role:
+    properties:
+      deleted_at:
+        example: 11111111
+        type: integer
+      permissions:
+        items:
+          $ref: '#/definitions/serializer.Permission'
+        type: array
+      rid:
+        example: 1
+        type: integer
+      roleDescription:
+        example: 所有权限
+        type: string
+      roleName:
+        example: 管理员
+        type: string
+    type: object
+  serializer.User:
+    properties:
+      created_at:
+        example: 1111111111
+        type: integer
+      deleted_at:
+        example: 1111111111
+        type: integer
+      id:
+        example: 1
+        type: integer
+      phone:
+        example: "13730822098"
+        type: string
+      role_id:
+        example: 1
+        type: integer
+      user_name:
+        example: Flyskea
+        type: string
+      work_id:
+        example: "20189999"
+        type: string
+    type: object
+  service.RoleAddService:
+    properties:
+      description:
+        example: 拥有所有权限
+        type: string
+      pids:
+        example:
+        - 1
+        - 2
+        - 3
+        - 4
+        items:
+          type: integer
+        type: array
+      roleName:
+        example: 管理员
+        type: string
+    required:
+    - description
+    - roleName
+    type: object
+  service.RoleUpdateService:
+    properties:
+      description:
+        type: string
+      id:
+        type: string
+      roleName:
+        type: string
+    required:
+    - description
+    - roleName
+    type: object
+  service.UserAddService:
+    properties:
+      name:
+        type: string
+      password:
+        type: string
+      role:
+        type: string
+      wid:
+        type: string
+    required:
+    - name
+    - password
+    - role
+    - wid
+    type: object
+  service.UserLoginService:
+    properties:
+      name:
+        example: Flyskea
+        type: string
+      password:
+        example: Flyskea
+        type: string
+    required:
+    - name
+    - password
+    type: object
 host: 127.0.0.1
 info:
   contact:
@@ -13,30 +171,402 @@ paths:
       - application/json
       description: 用户登录
       parameters:
-      - description: 人名
+      - description: 名字和密码
         in: body
-        name: name
+        name: loginParams
         required: true
         schema:
-          type: string
-      - description: 密码
-        in: body
-        name: pwd
-        required: true
-        schema:
-          type: string
+          $ref: '#/definitions/service.UserLoginService'
       produces:
       - application/json
       responses:
         "200":
-          description: '{"msg": "hello Razeen"}'
+          description: OK
           schema:
-            type: string
+            allOf:
+            - $ref: '#/definitions/serializer.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/serializer.User'
+              type: object
         "400":
-          description: '{"msg": "who are you"}'
+          description: Bad Request
           schema:
-            type: string
+            $ref: '#/definitions/serializer.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/serializer.Response'
       summary: 测试用户登录
+      tags:
+      - user
+  /role:
+    get:
+      consumes:
+      - application/json
+      description: 角色列表
+      parameters:
+      - description: 当前页数
+        in: query
+        name: page
+        type: integer
+      - description: 每页数量
+        in: query
+        name: size
+        type: integer
+      - description: 排序
+        in: query
+        name: sort
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/serializer.DataList'
+            - properties:
+                items:
+                  items:
+                    $ref: '#/definitions/serializer.Role'
+                  type: array
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/serializer.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/serializer.Response'
+      summary: 角色列表
+      tags:
+      - role
+    post:
+      consumes:
+      - application/json
+      description: 增加角色
+      parameters:
+      - description: 增加角色参数
+        in: body
+        name: addParams
+        required: true
+        schema:
+          $ref: '#/definitions/service.RoleAddService'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/serializer.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/serializer.Role'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/serializer.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/serializer.Response'
+      summary: 增加角色
+      tags:
+      - role
+  /role/:id:
+    get:
+      consumes:
+      - application/json
+      description: 单个角色详情
+      parameters:
+      - description: 角色ID
+        in: query
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/serializer.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/serializer.Role'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/serializer.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/serializer.Response'
+      summary: 单个角色详情
+      tags:
+      - role
+    post:
+      consumes:
+      - application/json
+      description: 删除角色
+      parameters:
+      - description: 角色ID
+        in: query
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{"msg", "删除角色成功"}'
+          schema:
+            $ref: '#/definitions/serializer.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/serializer.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/serializer.Response'
+      summary: 删除角色
+      tags:
+      - role
+  /role/:id/rights:
+    post:
+      consumes:
+      - application/json
+      description: 增加角色的权限
+      parameters:
+      - description: 角色ID
+        in: query
+        name: id
+        required: true
+        type: integer
+      - description: 权限ID
+        in: body
+        name: pids
+        schema:
+          items:
+            type: integer
+          type: array
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/serializer.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/serializer.Role'
+                  type: array
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/serializer.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/serializer.Response'
+      summary: 增加角色的权限
+      tags:
+      - role
+  /role/:id/rights/:pid/delete:
+    post:
+      consumes:
+      - application/json
+      description: 删除角色特定权限
+      parameters:
+      - description: 角色ID
+        in: query
+        name: id
+        required: true
+        type: integer
+      - description: 权限ID
+        in: query
+        name: pid
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/serializer.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/serializer.Role'
+                  type: array
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/serializer.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/serializer.Response'
+      summary: 删除角色特定权限
+      tags:
+      - role
+  /user:
+    get:
+      consumes:
+      - application/json
+      description: 用户列表
+      parameters:
+      - description: 当前页数
+        in: query
+        name: page
+        type: integer
+      - description: 每页数量
+        in: query
+        name: size
+        type: integer
+      - description: 排序
+        in: query
+        name: sort
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/serializer.DataList'
+            - properties:
+                items:
+                  items:
+                    $ref: '#/definitions/serializer.User'
+                  type: array
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/serializer.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/serializer.Response'
+      summary: 用户列表
+      tags:
+      - user
+    post:
+      consumes:
+      - application/json
+      description: 增加用户
+      parameters:
+      - description: 名字和密码
+        in: body
+        name: loginParams
+        required: true
+        schema:
+          $ref: '#/definitions/service.UserAddService'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/serializer.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/serializer.User'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/serializer.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/serializer.Response'
+      summary: 测试增加用户
+      tags:
+      - user
+  /user/:id/delete:
+    post:
+      consumes:
+      - application/json
+      description: 删除用户
+      parameters:
+      - description: 用户ID
+        in: query
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'Msg": "删除该用户成功"}'
+          schema:
+            $ref: '#/definitions/serializer.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/serializer.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/serializer.Response'
+      summary: 删除用户
+      tags:
+      - user
+  /user/:id/role:
+    post:
+      consumes:
+      - application/json
+      description: 更新用户角色
+      parameters:
+      - description: 用户ID
+        in: query
+        name: id
+        required: true
+        type: integer
+      - description: 角色ID
+        in: body
+        name: rid
+        required: true
+        schema:
+          type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/serializer.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/serializer.User'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/serializer.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/serializer.Response'
+      summary: 更新用户角色
       tags:
       - user
 schemes:

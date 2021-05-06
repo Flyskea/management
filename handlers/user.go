@@ -10,6 +10,16 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// @Summary 测试增加用户
+// @Description 增加用户
+// @Tags user
+// @Accept json
+// @Produce json
+// @Param loginParams body service.UserAddService true "名字和密码"
+// @Success 200 {object} serializer.Response{data=serializer.User}
+// @Failure 400 {object} serializer.Response
+// @Failure 500 {object} serializer.Response
+// @Router /user [post]
 // AddUser add a user with role
 func AddUser(c *gin.Context) {
 	var (
@@ -26,7 +36,18 @@ func AddUser(c *gin.Context) {
 	}
 }
 
-// UpdateUserRole 。。
+// @Summary 更新用户角色
+// @Description 更新用户角色
+// @Tags user
+// @Accept json
+// @Produce json
+// @Param id query int true "用户ID"
+// @Param rid body int true "角色ID"
+// @Success 200 {object} serializer.Response{data=serializer.User}
+// @Failure 400 {object} serializer.Response
+// @Failure 500 {object} serializer.Response
+// @Router /user/:id/role [post]
+// UpdateUserRole 更新用户角色
 func UpdateUserRole(c *gin.Context) {
 	var (
 		id      string = c.Param("id")
@@ -44,6 +65,16 @@ func UpdateUserRole(c *gin.Context) {
 	}
 }
 
+// @Summary 删除用户
+// @Description 删除用户
+// @Tags user
+// @Accept json
+// @Produce json
+// @Param id query int true "用户ID"
+// @Success 200 {object} serializer.Response {"Msg": "删除该用户成功"}
+// @Failure 400 {object} serializer.Response
+// @Failure 500 {object} serializer.Response
+// @Router /user/:id/delete [post]
 // DeleteUser delete user
 func DeleteUser(c *gin.Context) {
 	var (
@@ -60,6 +91,18 @@ func DeleteUser(c *gin.Context) {
 	}
 }
 
+// @Summary 用户列表
+// @Description 用户列表
+// @Tags user
+// @Accept json
+// @Produce json
+// @Param page query int false "当前页数"
+// @Param size query int false "每页数量"
+// @Param sort query int false "排序"
+// @Success 200 {object} serializer.DataList{items=[]serializer.User}
+// @Failure 400 {object} serializer.Response
+// @Failure 500 {object} serializer.Response
+// @Router /user [get]
 // UserLists get user lists
 func UserLists(c *gin.Context) {
 	var (
@@ -74,10 +117,10 @@ func UserLists(c *gin.Context) {
 // @Tags user
 // @Accept json
 // @Produce json
-// @Param name body object true "人名"
-// @Param pwd body object true "密码"
-// @Success 200 {string} string "{"msg": "hello Razeen"}"
-// @Failure 400 {string} string "{"msg": "who are you"}"
+// @Param loginParams body service.UserLoginService true "名字和密码"
+// @Success 200 {object} serializer.Response{data=serializer.User}
+// @Failure 400 {object} serializer.Response
+// @Failure 500 {object} serializer.Response
 // @Router /login [post]
 //Login log in handler
 func Login(c *gin.Context) {

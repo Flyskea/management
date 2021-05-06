@@ -11,8 +11,8 @@ import (
 
 // UserLoginService 管理用户登录的服务
 type UserLoginService struct {
-	UserName string `json:"name" binding:"required"`
-	Password string `json:"password" binding:"required"`
+	UserName string `json:"name" binding:"required" example:"Flyskea"`
+	Password string `json:"password" binding:"required" example:"Flyskea"`
 }
 
 // UserAddService 管理增加用户的服务

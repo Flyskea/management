@@ -16,9 +16,9 @@ type RoleListService struct {
 
 // RoleAddService 管理增加角色的服务
 type RoleAddService struct {
-	Name        string `json:"roleName" binding:"required,min=1,max=20"`
-	Description string `json:"description" binding:"required,min=1,max=100"`
-	Permission  []uint `json:"pids"`
+	Name        string `json:"roleName" binding:"required,min=1,max=20" example:"管理员"`
+	Description string `json:"description" binding:"required,min=1,max=100" example:"拥有所有权限"`
+	Permission  []uint `json:"pids" example:"1,2,3,4"`
 }
 
 // RolePermissionAddService 管理增加角色权限的服务
@@ -30,8 +30,8 @@ type RolePermissionAddService struct {
 // RoleUpdateService 管理更改角色名字或描述的服务
 type RoleUpdateService struct {
 	ID          string
-	Name        string `json:"roleName"`
-	Description string `json:"description"`
+	Name        string `json:"roleName" binding:"required"`
+	Description string `json:"description" binding:"required"`
 }
 
 // RoleDeleteService 管理删除角色的服务

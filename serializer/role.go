@@ -5,10 +5,10 @@ import (
 )
 
 type Role struct {
-	ID          uint          `json:"rid"`
-	DeletedAt   int64         `json:"deleted_at"`
-	Name        string        `json:"roleName"`
-	Description string        `json:"roleDescription"`
+	ID          uint          `json:"rid" example:"1"`
+	DeletedAt   int64         `json:"deleted_at" example:"11111111"`
+	Name        string        `json:"roleName" example:"管理员"`
+	Description string        `json:"roleDescription" example:"所有权限"`
 	Permissions []*Permission `json:"permissions"`
 }
 

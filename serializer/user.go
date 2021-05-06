@@ -7,13 +7,13 @@ import (
 
 // User 用户序列化器
 type User struct {
-	ID        uint   `json:"id"`
-	RoleID    uint   `json:"role_id"`
-	WorkID    string `json:"work_id"`
-	CreatedAt int64  `json:"created_at"`
-	DeletedAt int64  `json:"deleted_at"`
-	Name      string `json:"user_name"`
-	Phone     string `json:"phone"`
+	ID        uint   `json:"id" example:"1"`
+	RoleID    uint   `json:"role_id" example:"1"`
+	WorkID    string `json:"work_id" example:"20189999"`
+	CreatedAt int64  `json:"created_at" example:"1111111111"`
+	DeletedAt int64  `json:"deleted_at" example:"1111111111"`
+	Name      string `json:"user_name" example:"Flyskea"`
+	Phone     string `json:"phone" example:"13730822098"`
 }
 
 // UserResponse 单个用户序列化
