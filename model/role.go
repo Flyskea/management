@@ -22,7 +22,7 @@ type RolePermission struct {
 
 //IsRoleExist used to detect role is whether in database
 func (r *Role) IsRoleExist() (bool, error) {
-	err := DB.Where("name = ?", r.Name).First(r).Error
+	err := DB.Where("id= ?", r.ID).First(r).Error
 	if err != nil && err != gorm.ErrRecordNotFound {
 		return false, err
 	}
